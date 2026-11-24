@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LB Toolkit</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23d9480f'/%3E%3Cpath d='M9 9h5v14H9zM16 19h7v4h-7z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#f1eee7; --panel:#f8f6f1; --ink:#1c1b19; --muted:#7a766c; --line:#d9d4c8;
+    --accent:#d9480f; --accent-ink:#fff; --hover:#ebe7dc;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --mono:ui-monospace,"Cascadia Code",Consolas,Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#161513;--panel:#1c1b18;--ink:#ece8de;--muted:#8f8a7d;--line:#33312b;--accent:#ff7a3d;--accent-ink:#161513;--hover:#24221e}
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+  /* topo */
+  header{border-bottom:1px solid var(--line)}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 0;flex-wrap:wrap}
+  .brand{display:flex;align-items:baseline;gap:10px}
+  .brand b{font-family:var(--serif);font-size:1.7rem;letter-spacing:-.02em;font-weight:700}
+  .brand span{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+  .brand i{font-style:normal;color:var(--accent)}
+  .search{position:relative;width:min(340px,100%)}
+  .search input{width:100%;padding:9px 40px 9px 12px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink);font:inherit;outline:none}
+  .search input:focus{border-color:var(--accent)}
+  .search kbd{position:absolute;right:9px;top:50%;transform:translateY(-50%);font:.72rem var(--mono);color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:0 5px}
+
+  /* corpo */
+  .layout{display:grid;grid-template-columns:210px 1fr;gap:44px;padding:30px 0 70px}
+  aside nav{position:sticky;top:20px;display:flex;flex-direction:column}
+  aside .label{font:.7rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  aside button{display:flex;align-items:baseline;gap:12px;text-align:left;background:none;border:0;border-left:2px solid var(--line);color:var(--muted);padding:8px 0 8px 14px;cursor:pointer;font:inherit;transition:color .12s,border-color .12s,background .12s}
+  aside button em{font:.72rem var(--mono);font-style:normal;opacity:.7;width:1.4rem}
+  aside button span{flex:1}
+  aside button small{font:.72rem var(--mono);opacity:.6;padding-right:8px}
+  aside button:hover{color:var(--ink);background:var(--hover)}
+  aside button.on{color:var(--ink);border-left-color:var(--accent);font-weight:600}
+
+  .path{font:.78rem var(--mono);color:var(--muted);margin:0 0 6px}
+  .path b{color:var(--accent);font-weight:500}
+  h1{font-family:var(--serif);font-size:2.5rem;line-height:1.05;letter-spacing:-.025em;margin:0 0 26px;font-weight:700}
+  h2{font:.72rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:30px 0 4px;display:flex;gap:12px;align-items:center}
+  h2::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  /* linhas de download */
+  .row{display:grid;grid-template-columns:minmax(120px,200px) 1fr auto;gap:18px;align-items:baseline;padding:14px 10px;margin:0 -10px;border-bottom:1px solid var(--line);color:inherit;text-decoration:none;transition:background .12s,padding .12s}
+  .row:hover{background:var(--hover);padding-left:16px}
+  .row .name{font-weight:600;font-size:1.02rem}
+  .row .desc{color:var(--muted)}
+  .row .go{font:.78rem var(--mono);color:var(--accent);white-space:nowrap}
+  .row .go::after{content:" ↗"}
+  .row .tag{font:.68rem var(--mono);color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:0 5px;margin-left:8px;vertical-align:2px;font-weight:400}
+
+  .acts{display:flex;gap:16px;white-space:nowrap}
+  .acts a{font:.78rem var(--mono);color:var(--accent);text-decoration:none}
+  .acts a:hover{text-decoration:underline}
+  .acts a.alt{color:var(--muted)}
+
+  /* comandos */
+  button.row{width:calc(100% + 20px);background:none;border-width:0 0 1px;text-align:left;font:inherit;cursor:pointer;grid-template-columns:minmax(180px,1.2fr) 1fr auto}
+  .cmd{font:.9rem var(--mono);word-break:break-all}
+  .cmd::before{content:"> ";color:var(--accent);font-weight:700}
+  button.row .go::after{content:""}
+
+  .empty{color:var(--muted);padding:30px 0;font-family:var(--serif);font-size:1.2rem}
+  footer{border-top:1px solid var(--line);padding:18px 0 34px;color:var(--muted);font:.76rem var(--mono)}
+
+  @media (max-width:760px){
+    .layout{grid-template-columns:1fr;gap:18px;padding-top:18px}
+    aside nav{position:static;flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:6px}
+    aside .label{display:none}
+    aside button{border:1px solid var(--line);border-radius:4px;padding:6px 12px;white-space:nowrap}
+    aside button em,aside button small{display:none}
+    aside button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+    h1{font-size:2rem}
+    .row,button.row{grid-template-columns:1fr auto;gap:2px 12px}
+    .row .desc{grid-column:1/2;grid-row:2}
+    .row .go,.row .acts{grid-row:1/3;grid-column:2;align-self:center}
+    .acts{flex-direction:column;gap:2px;align-items:flex-end}
+    .cmd{grid-column:1/2}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap top">
+    <div class="brand"><b>LB<i>.</i>toolkit</b><span>pen drive digital</span></div>
+    <div class="search"><input id="q" type="search" placeholder="Buscar…" autocomplete="off" aria-label="Buscar"><kbd>/</kbd></div>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <aside><nav id="nav"><div class="label">Pastas</div></nav></aside>
+  <main>
+    <p class="path" id="path"></p>
+    <h1 id="title"></h1>
+    <div id="out"></div>
+  </main>
+</div>
+
+<footer><div class="wrap">Arquivo próprio quando disponível, senão link oficial · clique em um comando para copiar</div></footer>
+
+<script>
+/* ===== DADOS DE RESERVA =====
+   O site lê a lista da PLANILHA (variável lá no fim do arquivo).
+   Esta lista só aparece se a planilha não carregar.
+   No dia a dia, edite a planilha / o dados.csv, não este bloco.
+   Item de download:  { n: "Nome", u: "link oficial", d: "descrição" }
+   Com arquivo seu:   { n: "Nome", u: "link oficial", d: "descrição",
+                        f: "downloads/AnyDesk.exe", s: "4 MB" }
+     f = link de download DIRETO (baixa com um clique): arquivo do repositório,
+         GitHub Release, ou o link normal de compartilhamento do Google Drive /
+         Dropbox (a página converte sozinha, é só colar)
+     m = link do Mega (abre a página do Mega, o download é feito lá)
+     s = tamanho, opcional. Sem "f", o item só mostra o link oficial.
+   Comando:           ["comando", "o que faz"]                      */
+let DATA = [
+  { aba: "Impressora", grupos: [
+    { nome: "Drivers e suporte", itens: [
+      { n: "Brother", u: "https://support.brother.com/g/b/countrytop.aspx?c=br&lang=pt", d: "Drivers e utilitários",
+        f: "https://drive.google.com/file/d/10HARi2s8LVXQUjsUT2xkRWAQNN0sNyeX/view?usp=sharing" },
+      { n: "HP", u: "https://support.hp.com/br-pt/drivers", d: "Drivers e software" },
+      { n: "Canon", u: "https://www.canon.com.br/suporte", d: "Drivers e downloads" }
+    ]}
+  ]},
+  { aba: "Acesso Remoto", grupos: [
+    { nome: "Ferramentas", itens: [
+      { n: "AnyDesk", u: "https://anydesk.com/pt/downloads", d: "Acesso remoto rápido",
+        f: "https://drive.google.com/file/d/1YWgrWFU5r_bNGrgmHOQvibcKyZg74PS7/view?usp=sharing" },
+      { n: "RustDesk", u: "https://rustdesk.com/", d: "Open source, alternativa ao AnyDesk",
+        f: "https://drive.google.com/file/d/1LQqBp_KGFYtatgu9EIN8YoJT2S6VgEn8/view?usp=sharing" },
+      { n: "TeamViewer", u: "https://www.teamviewer.com/pt-br/download/", d: "Acesso remoto e suporte" }
+    ]}
+  ]},
+  { aba: "Programas", grupos: [
+    { nome: "Essenciais", itens: [
+      { n: "Lark", u: "https://www.larksuite.com/download", d: "Mensagens e colaboração",
+        f: "https://drive.google.com/file/d/1FOGbWrRBq891lLJNefh8HDsVP1t7ngW9/view?usp=drive_link" },
+      { n: "ONLYOFFICE", u: "https://www.onlyoffice.com/download-desktop.aspx", d: "Suíte de escritório gratuita",
+        f: "https://drive.google.com/file/d/1BVqnBTCAKGY1ge7qLHEaBeJmk5oCyidD/view?usp=sharing" },
+      { n: "Office Setup", u: "https://www.microsoft.com/pt-br/microsoft-365/download-office", d: "Instalador do Microsoft Office",
+        f: "https://drive.google.com/file/d/1tNUBKrxK14DOOj95CC7Kdv3lIewO8u7I/view?usp=sharing" },
+      { n: "WeChat", u: "https://www.wechat.com/", d: "Mensagens",
+        f: "https://drive.google.com/file/d/1eAhsgOxvGzyHT7gJ5ClpAGyzEmlDUrx1/view?usp=sharing" },
+      { n: "Nextcloud", u: "https://nextcloud.com/install/#install-clients", d: "Cliente de sincronização de arquivos",
+        f: "https://drive.google.com/file/d/1ZTybwVZhAYed7BUXxrFeg1JHHaJdKXEX/view?usp=sharing" }
+    ]}
+  ]},
+  { aba: "Sistemas", grupos: [
+    { nome: "Instalação e resgate", itens: [
+      { n: "Windows 11", u: "https://www.microsoft.com/pt-br/software-download/windows11", d: "ISO do Windows 11",
+        f: "https://drive.google.com/file/d/1gHmO4yiN9qrITDdYAT1Q0_47JICj6Waq/view?usp=sharing" },
+      { n: "Zorin OS 18.1 Core", u: "https://zorin.com/os/download/", d: "Distribuição Linux amigável",
+        f: "https://drive.google.com/file/d/1Ftu2g7r0QMCPu-x8eNt2YM8sdkXVIHNt/view?usp=sharing" },
+      { n: "Hiren's BootCD", u: "https://www.hirensbootcd.org/download/", d: "Ferramentas de boot e recuperação",
+        f: "https://drive.google.com/file/d/12oOzkHw1z_wzbeIzzSqEtnPe9z4__EVR/view?usp=sharing" }
+    ]}
+  ]},
+  { aba: "Navegadores", grupos: [
+    { nome: "Downloads", itens: [
+      { n: "Chrome", u: "https://www.google.com/intl/pt-BR/chrome/", d: "Google",
+        f: "https://drive.google.com/file/d/1UGhcozi7xik0KJMNtqXptONupOsTlmp5/view?usp=sharing" },
+      { n: "Firefox", u: "https://www.mozilla.org/pt-BR/firefox/new/", d: "Mozilla" },
+      { n: "Brave", u: "https://brave.com/pt-br/download/", d: "Foco em privacidade" },
+      { n: "Opera", u: "https://www.opera.com/pt-br/download", d: "Opera" }
+    ]}
+  ]},
+  { aba: "Redes", grupos: [
+    { nome: "Diagnóstico", itens: [
+      { n: "Wireshark", u: "https://www.wireshark.org/download.html", d: "Análise de pacotes" },
+      { n: "Advanced IP Scanner", u: "https://www.advanced-ip-scanner.com/br/", d: "Varredura da rede local" }
+    ]}
+  ]},
+  { aba: "Prompt", comandos: [
+    { g: "Rede", c: [
+      ["ipconfig /all", "Configuração completa de rede"],
+      ["ipconfig /flushdns", "Limpa o cache de DNS"],
+      ["ipconfig /release && ipconfig /renew", "Renova o IP via DHCP"],
+      ["ping 8.8.8.8 -t", "Teste contínuo de conectividade"],
+      ["tracert google.com", "Rota até o destino"],
+      ["nslookup dominio.com.br", "Consulta DNS"],
+      ["netstat -ano", "Conexões ativas e PID"],
+      ["arp -a", "Tabela ARP (IP x MAC)"],
+      ["netsh wlan show profiles", "Redes Wi-Fi salvas"],
+      ["netsh winsock reset", "Reseta a pilha de rede"]
+    ]},
+    { g: "Sistema", c: [
+      ["sfc /scannow", "Verifica arquivos do sistema"],
+      ["DISM /Online /Cleanup-Image /RestoreHealth", "Repara a imagem do Windows"],
+      ["chkdsk C: /f /r", "Verifica o disco (pede reinício)"],
+      ["gpupdate /force", "Força atualização de GPO"],
+      ["systeminfo", "Informações do sistema"],
+      ["tasklist", "Lista processos"],
+      ["taskkill /PID 1234 /F", "Encerra processo pelo PID"],
+      ["whoami", "Usuário atual"],
+      ["wmic bios get serialnumber", "Número de série da máquina"],
+      ["Get-CimInstance Win32_BIOS | Select-Object SerialNumber", "Número de série da máquina (PowerShell)"]
+    ]},
+    { g: "Impressão", c: [
+      ["net stop spooler && net start spooler", "Reinicia o spooler de impressão"],
+      ["printmanagement.msc", "Gerenciamento de impressão"],
+      ["control printers", "Dispositivos e impressoras"]
+    ]},
+    { g: "Executar (Win + R)", c: [
+      ["services.msc", "Serviços"],
+      ["devmgmt.msc", "Gerenciador de dispositivos"],
+      ["ncpa.cpl", "Conexões de rede"],
+      ["appwiz.cpl", "Programas e recursos"],
+      ["msconfig", "Configuração do sistema"],
+      ["eventvwr", "Visualizador de eventos"]
+    ]}
+  ]}
+];
+/* ===== FIM DA EDIÇÃO ===== */
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const slug = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\W+/g,'-');
+const count = t => (t.grupos||[]).reduce((a,g)=>a+g.itens.length,0) + (t.comandos||[]).reduce((a,g)=>a+g.c.length,0);
+
+let cur = Math.max(0, DATA.findIndex(t => slug(t.aba) === location.hash.slice(1)));
+
+function nav(){
+  const n = $('nav');
+  n.querySelectorAll('button').forEach(b => b.remove());
+  DATA.forEach((t,i) => {
+    const b = document.createElement('button');
+    b.className = (i === cur && !$('q').value) ? 'on' : '';
+    b.innerHTML = `<em>${String(i+1).padStart(2,'0')}</em><span>${esc(t.aba)}</span><small>${count(t)}</small>`;
+    b.onclick = () => { cur = i; $('q').value = ''; location.hash = slug(t.aba); render(); };
+    n.appendChild(b);
+  });
+}
+
+/* Converte link de compartilhamento do Drive/Dropbox em link de download direto */
+const direct = u => {
+  const g = u.match(/drive\.google\.com\/file\/d\/([\w-]+)/) || u.match(/drive\.google\.com\/(?:open|uc)\?[^#]*?id=([\w-]+)/);
+  if (g) return `https://drive.usercontent.google.com/download?id=${g[1]}&export=download&confirm=t`;
+  if (/dropbox\.com/.test(u)) return u.replace(/([?&])dl=0/, '$1dl=1');
+  return u;
+};
+
+const linkRow = (it, tag) => {
+  const tagH = tag ? `<span class="tag">${esc(tag)}</span>` : '';
+  const parts = [];
+  if (it.f) parts.push(`<a href="${esc(direct(it.f))}" download>baixar${it.s ? ' · ' + esc(it.s) : ''}</a>`);
+  if (it.m) parts.push(`<a class="${it.f ? 'alt' : ''}" href="${esc(it.m)}" target="_blank" rel="noopener">mega ↗</a>`);
+  if (it.u) parts.push(`<a class="${(it.f || it.m) ? 'alt' : ''}" href="${esc(it.u)}" target="_blank" rel="noopener">${(it.f || it.m) ? 'oficial' : 'site oficial'} ↗</a>`);
+  const acts = parts.join('');
+  return `<div class="row"><span class="name">${esc(it.n)}${tagH}</span>` +
+         `<span class="desc">${esc(it.d||'')}</span><span class="acts">${acts}</span></div>`;
+};
+const cmdRow = (c, tag) =>
+  `<button class="row" data-c="${esc(c[0])}">
+     <span class="cmd">${esc(c[0])}${tag ? `<span class="tag">${esc(tag)}</span>` : ''}</span>
+     <span class="desc">${esc(c[1])}</span><span class="go">copiar</span></button>`;
+
+function render(){
+  nav();
+  const q = $('q').value.trim().toLowerCase();
+  const tabs = q ? DATA : [DATA[cur]];
+  let html = '', total = 0;
+
+  tabs.forEach(t => {
+    const tag = q ? t.aba : '';
+    (t.grupos||[]).forEach(g => {
+      const its = g.itens.filter(i => !q || (i.n+' '+(i.d||'')).toLowerCase().includes(q));
+      if (!its.length) return;
+      total += its.length;
+      html += `<h2>${esc(g.nome)}</h2>` + its.map(i => linkRow(i, tag)).join('');
+    });
+    (t.comandos||[]).forEach(g => {
+      const cs = g.c.filter(c => !q || (c[0]+' '+c[1]).toLowerCase().includes(q));
+      if (!cs.length) return;
+      total += cs.length;
+      html += `<h2>${esc(g.g)}</h2>` + cs.map(c => cmdRow(c, tag)).join('');
+    });
+  });
+
+  if (q) {
+    $('path').innerHTML = `<b>busca</b> / ${esc(q)}`;
+    $('title').textContent = total ? `${total} resultado${total>1?'s':''}` : 'Nada por aqui';
+  } else {
+    $('path').innerHTML = `E:\\toolkit\\<b>${esc(DATA[cur].aba)}</b>`;
+    $('title').textContent = DATA[cur].aba;
+  }
+  $('out').innerHTML = html || '<p class="empty">Nenhum item encontrado.</p>';
+}
+
+$('out').addEventListener('click', e => {
+  const b = e.target.closest('button[data-c]');
+  if (!b) return;
+  navigator.clipboard.writeText(b.dataset.c).then(() => {
+    const go = b.querySelector('.go');
+    go.textContent = 'copiado ✓';
+    setTimeout(() => go.textContent = 'copiar', 1200);
+  });
+});
+$('q').addEventListener('input', render);
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && document.activeElement !== $('q')) { e.preventDefault(); $('q').focus(); }
+  if (e.key === 'Escape') { $('q').value = ''; $('q').blur(); render(); }
+});
+window.addEventListener('hashchange', () => {
+  const i = DATA.findIndex(t => slug(t.aba) === location.hash.slice(1));
+  if (i >= 0) { cur = i; $('q').value = ''; render(); }
+});
+/* ===== FONTE DOS DADOS =====
+   Onde o site busca a lista de programas e comandos:
+   - "dados.csv"  → arquivo na mesma pasta do site (edite pelo GitHub)
+   - link CSV publicado do Google Planilhas → edite só a planilha
+   - ""           → usa apenas a lista de reserva acima              */
+const PLANILHA = "dados.csv";
+
+function parseCSV(t){
+  t = t.replace(/^\uFEFF/, '');
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (q) {
+      if (c === '"') { if (t[i+1] === '"') { cell += '"'; i++; } else q = false; }
+      else cell += c;
+    }
+    else if (c === '"') q = true;
+    else if (c === ',') { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && t[i+1] === '\n') i++;
+      row.push(cell); cell = ''; rows.push(row); row = [];
+    }
+    else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(r => r.some(x => x.trim()));
+}
+
+function csvToData(rows){
+  const [head, ...body] = rows;
+  const idx = {};
+  head.forEach((h,i) => idx[h.trim().toLowerCase()] = i);
+  const g = (r,k) => (r[idx[k]] || '').trim();
+  const tabs = [];
+  body.forEach(r => {
+    if (!g(r,'nome')) return;
+    const aba = g(r,'aba'), grupo = g(r,'grupo') || 'Geral', tipo = g(r,'tipo').toLowerCase();
+    if (!aba) return;
+    let t = tabs.find(x => x.aba === aba);
+    if (!t) { t = { aba }; tabs.push(t); }
+    if (tipo === 'comando') {
+      t.comandos = t.comandos || [];
+      let gr = t.comandos.find(x => x.g === grupo);
+      if (!gr) { gr = { g: grupo, c: [] }; t.comandos.push(gr); }
+      gr.c.push([g(r,'nome'), g(r,'descricao')]);
+    } else {
+      t.grupos = t.grupos || [];
+      let gr = t.grupos.find(x => x.nome === grupo);
+      if (!gr) { gr = { nome: grupo, itens: [] }; t.grupos.push(gr); }
+      gr.itens.push({ n: g(r,'nome'), d: g(r,'descricao'), u: g(r,'oficial'),
+                      f: g(r,'arquivo'), m: g(r,'mega'), s: g(r,'tamanho') });
+    }
+  });
+  return tabs;
+}
+
+async function carregar(){
+  render();
+  if (!PLANILHA) return;
+  try {
+    const r = await fetch(PLANILHA, { cache: 'no-store' });
+    if (!r.ok) throw new Error(r.status);
+    const d = csvToData(parseCSV(await r.text()));
+    if (!d.length) return;
+    DATA = d;
+    cur = Math.max(0, DATA.findIndex(t => slug(t.aba) === location.hash.slice(1)));
+    render();
+  } catch (e) { /* mantém a lista de reserva */ }
+}
+carregar();
+</script>
+</body>
+</html>
